@@ -8,9 +8,11 @@ import EmptyState from "../../components/EmptyState";
 import CategoryForm from "../../components/CategoryForm";
 import { categoryService } from "../../services/categoryService";
 import { useToast } from "../../hooks/useToast";
+import { useAuth } from "../../hooks/useAuth";
 
 function Categories() {
   const toast = useToast();
+  const canManage = useAuth().can("categories");
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,7 +92,7 @@ function Categories() {
       <PageHeader
         title="Categorias"
         subtitle="Organize suas despesas por categoria"
-        action={<Button onClick={openCreate}>Nova categoria</Button>}
+        action={canManage && <Button onClick={openCreate}>Nova categoria</Button>}
       />
 
       {loading ? (
@@ -100,9 +102,11 @@ function Categories() {
           title="Nenhuma categoria"
           message="Crie sua primeira categoria para começar a organizar suas despesas."
           action={
-            <Button onClick={openCreate} className="mt-2">
-              Nova categoria
-            </Button>
+            canManage && (
+              <Button onClick={openCreate} className="mt-2">
+                Nova categoria
+              </Button>
+            )
           }
         />
       ) : (
@@ -112,7 +116,9 @@ function Categories() {
               <tr>
                 <th className="px-4 py-3 font-medium">Nome</th>
                 <th className="px-4 py-3 font-medium">Descrição</th>
-                <th className="px-4 py-3 text-right font-medium">Ações</th>
+                {canManage && (
+                  <th className="px-4 py-3 text-right font-medium">Ações</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -122,24 +128,26 @@ function Categories() {
                   <td className="px-4 py-3 text-gray-400">
                     {cat.description || "-"}
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        onClick={() => openEdit(cat)}
-                        className="px-3 py-1 text-xs"
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        variant="danger"
-                        onClick={() => setDeleting(cat)}
-                        className="px-3 py-1 text-xs"
-                      >
-                        Excluir
-                      </Button>
-                    </div>
-                  </td>
+                  {canManage && (
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          onClick={() => openEdit(cat)}
+                          className="px-3 py-1 text-xs"
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="danger"
+                          onClick={() => setDeleting(cat)}
+                          className="px-3 py-1 text-xs"
+                        >
+                          Excluir
+                        </Button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

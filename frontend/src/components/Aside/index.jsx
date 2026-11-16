@@ -3,16 +3,21 @@ import logo from "../../assets/img/logo-julius.png";
 import dashboardIcon from "/dashboard.svg";
 import expenseIcon from "/expense.svg";
 import categoryIcon from "/category.svg";
+import childrenIcon from "/children.svg";
 import { useAuth } from "../../hooks/useAuth";
 
 const menu = [
-  { label: "Dashboard", icon: dashboardIcon, to: "/" },
-  { label: "Despesas", icon: expenseIcon, to: "/expenses" },
+  { label: "Dashboard", icon: dashboardIcon, to: "/", permission: "expenses" },
+  { label: "Despesas", icon: expenseIcon, to: "/expenses", permission: "expenses" },
   { label: "Categorias", icon: categoryIcon, to: "/categories" },
+  { label: "Filhos", icon: childrenIcon, to: "/children", ownerOnly: true },
 ];
 
 function Aside({ mobileOpen = false, onNavigate }) {
-  const { user, logout } = useAuth();
+  const { user, logout, isOwner, can } = useAuth();
+  const items = menu.filter((op) =>
+    op.ownerOnly ? isOwner : !op.permission || can(op.permission)
+  );
 
   return (
     <aside
@@ -26,7 +31,7 @@ function Aside({ mobileOpen = false, onNavigate }) {
       </p>
 
       <nav className="mt-9 flex flex-1 flex-col gap-2">
-        {menu.map((op) => (
+        {items.map((op) => (
           <NavLink
             key={op.to}
             to={op.to}

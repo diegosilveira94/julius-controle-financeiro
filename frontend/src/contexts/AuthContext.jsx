@@ -34,10 +34,21 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
-  const value = useMemo(
-    () => ({ user, token, isAuthenticated: Boolean(token), login, logout }),
-    [user, token]
-  );
+  const value = useMemo(() => {
+    const isOwner = user?.role !== "CHILD";
+    const can = (permission) =>
+      isOwner || Boolean(user?.permissions?.includes(permission));
+
+    return {
+      user,
+      token,
+      isAuthenticated: Boolean(token),
+      isOwner,
+      can,
+      login,
+      logout,
+    };
+  }, [user, token]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
