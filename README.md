@@ -10,6 +10,7 @@ Aplicação web para organizar despesas pessoais, acompanhar gastos em um dashbo
 - Filtros de despesas por categoria, status, período e faixa de valores.
 - Interface responsiva com feedback de carregamento, validação e notificações.
 - Dados e dashboard separados por usuário autenticado.
+- Controle parental: o responsável cria contas para os filhos, escolhe o que cada um pode usar e acompanha os gastos deles.
 
 ## Telas
 

@@ -133,7 +133,11 @@ Base: `http://localhost:3000/api`
 | PUT    | /users/:id | Atualiza usuário     |
 | DELETE | /users/:id | Remove usuário       |
 
+`/users/:id` só aceita o id do próprio usuário logado. Contas de filho não podem se excluir.
+
 ### Categorias (protegidas)
+
+Leitura liberada para todos os usuários logados; criar, editar e excluir exige a permissão `categories` para contas de filho.
 
 | Método | Rota            | Descrição              |
 | ------ | --------------- | ---------------------- |
@@ -154,7 +158,7 @@ Base: `http://localhost:3000/api`
 | PATCH  | /expenses/:id | Atualiza parcialmente        |
 | DELETE | /expenses/:id | Remove despesa               |
 
-O `userId` é obtido do token — não é enviado no corpo. Cada usuário só acessa as próprias despesas.
+O `userId` é obtido do token — não é enviado no corpo. Cada usuário só acessa as próprias despesas. Contas de filho precisam da permissão `expenses` (vale também para o dashboard).
 
 ### Dashboard (protegidas, por usuário)
 
@@ -163,6 +167,24 @@ O `userId` é obtido do token — não é enviado no corpo. Cada usuário só ac
 | GET    | /dashboard/total-expenses       | `{ "total": 3500.50 }`                    |
 | GET    | /dashboard/expenses-count       | `{ "count": 45 }`                         |
 | GET    | /dashboard/expenses-by-category | `[{ "category": "Food", "total": 1200 }]` |
+
+### Controle parental (protegidas, apenas contas `OWNER`)
+
+| Método | Rota                  | Descrição                                                     |
+| ------ | --------------------- | ------------------------------------------------------------- |
+| GET    | /children             | Lista as contas de filho do usuário                           |
+| POST   | /children             | Cria conta de filho (`name`, `email`, `password`, `permissions`) |
+| PATCH  | /children/:id         | Atualiza `name`, `password`, `permissions` e `isActive`        |
+| DELETE | /children/:id         | Remove a conta de filho                                       |
+| GET    | /children/:id/summary | Total, quantidade, gastos por categoria e despesas do filho  |
+
+## Controle parental
+
+- Todo usuário cadastrado por `POST /users` é `OWNER`. Contas `CHILD` só são criadas pelo responsável em `POST /children`; `role` e `parentId` são definidos pelo servidor.
+- Cada filho faz login normalmente em `/auth/login` e registra os próprios gastos. O responsável acompanha tudo em `/children/:id/summary`.
+- Permissões disponíveis (`src/config/permissions.js`): `expenses` (despesas e dashboard) e `categories` (gerenciar categorias). `OWNER` tem acesso a tudo.
+- As rotas usam os middlewares `requireOwner`, `requirePermission(permissao)` e `requireSelf` (`src/middlewares/accessControl.js`). Para proteger uma rota nova: `router.post("/rota", authMiddleware, requirePermission("chave"), View.metodo)`.
+- O `authMiddleware` recarrega o usuário do banco a cada requisição: bloquear o filho (`isActive: false`) ou mudar permissões vale na hora, sem esperar o token expirar.
 
 ## Filtros de despesas
 
@@ -214,7 +236,7 @@ Resposta:
 
 ## Entidades
 
-- **Usuário**: id, name, email (único), password (hash), createdAt, updatedAt
+- **Usuário**: id, name, email (único), password (hash), role (`OWNER` | `CHILD`), parentId, permissions, isActive, createdAt, updatedAt
 - **Categoria**: id (UUID), name, description
 - **Despesa**: id (UUID), description, amount, date, status (`PENDENTE` | `PAGA`), categoryId, userId
 
