@@ -21,6 +21,19 @@ export function validateRegister({ name, email, password }) {
   return errors;
 }
 
+export function validateChild({ name, email, password }, editing) {
+  const errors = {};
+  if (!name?.trim()) errors.name = "Informe o nome.";
+  if (!editing) {
+    if (!email?.trim()) errors.email = "Informe o e-mail.";
+    else if (!isValidEmail(email)) errors.email = "E-mail inválido.";
+    if (!password) errors.password = "Informe a senha.";
+  }
+  if (password && password.length < 6)
+    errors.password = "A senha deve ter ao menos 6 caracteres.";
+  return errors;
+}
+
 export function validateCategory({ name }) {
   const errors = {};
   if (!name?.trim()) errors.name = "Informe o nome da categoria.";

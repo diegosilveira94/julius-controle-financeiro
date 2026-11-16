@@ -2,14 +2,16 @@ import { Link } from "react-router-dom";
 import { formatCurrency, formatDate } from "../../utils/format";
 import StatusBadge from "../StatusBadge";
 
-function RecentExpenses({ expenses = [] }) {
+function RecentExpenses({ expenses = [], showAllLink = true }) {
   return (
     <div className="rounded-lg border border-border bg-surface p-5">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-100">Últimas despesas</h2>
-        <Link to="/expenses" className="text-sm text-primary hover:underline">
-          Ver todas
-        </Link>
+        {showAllLink && (
+          <Link to="/expenses" className="text-sm text-primary hover:underline">
+            Ver todas
+          </Link>
+        )}
       </div>
       {expenses.length === 0 ? (
         <p className="text-sm text-gray-500">Nenhuma despesa cadastrada.</p>
