@@ -11,9 +11,9 @@ class UserController {
   }
 
   static mapPublicUser(user) {
-    const { id, email, name } = UserController.mapUser(user);
+    const { id, email, name, role, permissions } = UserController.mapUser(user);
 
-    return { id, email, name };
+    return { id, email, name, role, permissions };
   }
 
   static async getAll() {
@@ -34,6 +34,10 @@ class UserController {
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new Error("Invalid credentials.");
+    }
+
+    if (!user.isActive) {
+      throw new Error("Account disabled.");
     }
 
     const token = jwt.sign(

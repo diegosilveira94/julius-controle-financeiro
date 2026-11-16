@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import authConfig from '../config/auth.js';
+import User from '../models/userModel.js';
 
-export default function authMiddleware(req, res, next) {
+export default async function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
@@ -14,14 +15,24 @@ export default function authMiddleware(req, res, next) {
         return res.status(401).send({ error: 'Token error.' });
     }
 
+    let decoded;
     try {
-        const decoded = jwt.verify(token, authConfig.jwt.secret);
-        req.user = {
-            id: decoded.id,
-            email: decoded.email
-        }
-        return next();
+        decoded = jwt.verify(token, authConfig.jwt.secret);
     } catch (err) {
         return res.status(401).send({ error: 'Invalid token or token expired.' });
     }
+
+    const user = await User.findByPk(decoded.id);
+
+    if (!user || !user.isActive) {
+        return res.status(401).send({ error: 'User not found or disabled.' });
+    }
+
+    req.user = {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        permissions: user.permissions
+    };
+    return next();
 }
