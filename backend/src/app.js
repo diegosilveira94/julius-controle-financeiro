@@ -10,6 +10,7 @@ import userRoutes from "./routes/userRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import childRoutes from "./routes/childRoutes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./config/swagger.js";
@@ -22,6 +23,7 @@ app.use("/api", userRoutes);
 app.use("/api", expenseRoutes);
 app.use("/api", categoryRoutes);
 app.use("/api", dashboardRoutes);
+app.use("/api", childRoutes);
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(errorHandler);
 
