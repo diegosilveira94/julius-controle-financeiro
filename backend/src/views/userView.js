@@ -3,7 +3,7 @@ import UserController from "../controllers/userController.js";
 class UserView {
   static async login(req, res) {
     try {
-      const { email, password } = req.body;
+      const { email, password } = req.body || {};
 
       if (!email || !password) {
         return res
