@@ -1,39 +1,64 @@
 import axios from "axios";
 
-export const TOKEN_KEY = "julius.token";
-export const USER_KEY = "julius.user";
+let accessToken = null;
+let refreshing = null;
+
+export function setAccessToken(token) {
+  accessToken = token;
+}
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api",
+  withCredentials: true,
 });
 
-// Anexa o token JWT (Authorization: Bearer <token>) em toda requisição.
+export function refreshSession() {
+  refreshing ??= api
+    .post("/auth/refresh")
+    .then(({ data }) => {
+      setAccessToken(data.token);
+      return data;
+    })
+    .finally(() => {
+      refreshing = null;
+    });
+
+  return refreshing;
+}
+
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_KEY);
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
   return config;
 });
 
-// Trata erros de forma centralizada:
-// - 401: limpa a sessão e redireciona para /login (exceto se já estiver nas telas públicas).
-// - Normaliza a mensagem de erro para exibição amigável nos toasts.
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    const status = error.response?.status;
+  async (error) => {
+    const { config, response } = error;
     const path = window.location.pathname;
 
-    if (status === 401 && path !== "/login" && path !== "/register") {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
-      window.location.assign("/login");
+    if (
+      response?.status === 401 &&
+      !config._retry &&
+      !config.url.startsWith("/auth/")
+    ) {
+      config._retry = true;
+      try {
+        await refreshSession();
+        return api(config);
+      } catch {
+        setAccessToken(null);
+        if (path !== "/login" && path !== "/register") {
+          window.location.assign("/login");
+        }
+      }
     }
 
     const message =
-      error.response?.data?.error ||
-      error.response?.data?.message ||
+      response?.data?.error ||
+      response?.data?.message ||
       error.message ||
       "Erro inesperado. Tente novamente.";
 

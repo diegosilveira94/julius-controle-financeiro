@@ -1,36 +1,30 @@
-import { createContext, useMemo, useState } from "react";
+import { createContext, useEffect, useMemo, useState } from "react";
 import { authService } from "../services/authService";
-import { TOKEN_KEY, USER_KEY } from "../services/api";
+import { refreshSession, setAccessToken } from "../services/api";
 
 export const AuthContext = createContext(null);
 
-function readStoredUser() {
-  try {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({ children }) {
-  // Sessão persistida: inicializa a partir do localStorage.
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
-  const [user, setUser] = useState(readStoredUser);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    refreshSession()
+      .then((data) => setUser(data.user))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
+  }, []);
 
   async function login(credentials) {
     const data = await authService.login(credentials);
-    localStorage.setItem(TOKEN_KEY, data.token);
-    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-    setToken(data.token);
+    setAccessToken(data.token);
     setUser(data.user);
     return data;
   }
 
-  function logout() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    setToken(null);
+  async function logout() {
+    await authService.logout().catch(() => {});
+    setAccessToken(null);
     setUser(null);
   }
 
@@ -41,14 +35,14 @@ export function AuthProvider({ children }) {
 
     return {
       user,
-      token,
-      isAuthenticated: Boolean(token),
+      loading,
+      isAuthenticated: Boolean(user),
       isOwner,
       can,
       login,
       logout,
     };
-  }, [user, token]);
+  }, [user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
