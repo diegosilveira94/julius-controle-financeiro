@@ -51,7 +51,7 @@ Em um terminal, entre na pasta `backend`:
 cd backend
 ```
 
-Crie o arquivo `.env` com base em `.env.example` e ajuste as configurações se necessário. Depois, execute:
+Crie o arquivo `.env` com base em `.env.example` e preencha o `JWT_SECRET` (obrigatório, veja o [README do backend](backend/README.md#configuração-do-env)). Depois, execute:
 
 ```bash
 docker compose up -d
