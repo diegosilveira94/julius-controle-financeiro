@@ -6,6 +6,9 @@ import Register from "../pages/Register";
 import Dashboard from "../pages/Dashboard";
 import Categories from "../pages/Categories";
 import Expenses from "../pages/Expenses";
+import Children from "../pages/Children";
+import ChildSummary from "../pages/ChildSummary";
+import RequireAccess from "./RequireAccess";
 
 // Rotas públicas não devem ser acessadas por quem já está logado.
 function PublicOnly({ children }) {
@@ -36,9 +39,39 @@ function AppRoutes() {
 
         {/* Rotas protegidas (compartilham o Layout com sidebar) */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/expenses" element={<Expenses />} />
+          <Route
+            path="/"
+            element={
+              <RequireAccess permission="expenses">
+                <Dashboard />
+              </RequireAccess>
+            }
+          />
+          <Route
+            path="/expenses"
+            element={
+              <RequireAccess permission="expenses">
+                <Expenses />
+              </RequireAccess>
+            }
+          />
           <Route path="/categories" element={<Categories />} />
+          <Route
+            path="/children"
+            element={
+              <RequireAccess ownerOnly>
+                <Children />
+              </RequireAccess>
+            }
+          />
+          <Route
+            path="/children/:id"
+            element={
+              <RequireAccess ownerOnly>
+                <ChildSummary />
+              </RequireAccess>
+            }
+          />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,14 +1,16 @@
 import express from "express";
 import authMiddleware from "../middlewares/authMiddleware.js";
+import { requirePermission } from "../middlewares/accessControl.js";
 import ExpenseView from "../views/expenseView.js";
 
 const router = express.Router();
+const canUseExpenses = [authMiddleware, requirePermission("expenses")];
 
-router.get("/expenses", authMiddleware, ExpenseView.getAll);
-router.get("/expenses/:id", authMiddleware, ExpenseView.getById);
-router.post("/expenses", authMiddleware, ExpenseView.create);
-router.put("/expenses/:id", authMiddleware, ExpenseView.updateAllFields);
-router.patch("/expenses/:id", authMiddleware, ExpenseView.update);
-router.delete("/expenses/:id", authMiddleware, ExpenseView.delete);
+router.get("/expenses", canUseExpenses, ExpenseView.getAll);
+router.get("/expenses/:id", canUseExpenses, ExpenseView.getById);
+router.post("/expenses", canUseExpenses, ExpenseView.create);
+router.put("/expenses/:id", canUseExpenses, ExpenseView.updateAllFields);
+router.patch("/expenses/:id", canUseExpenses, ExpenseView.update);
+router.delete("/expenses/:id", canUseExpenses, ExpenseView.delete);
 
 export default router;

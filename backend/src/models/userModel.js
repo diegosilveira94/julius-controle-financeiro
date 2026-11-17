@@ -108,6 +108,25 @@ User.init(
         notEmpty: true,
       },
     },
+    role: {
+      type: DataTypes.ENUM("OWNER", "CHILD"),
+      allowNull: false,
+      defaultValue: "OWNER",
+    },
+    parentId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+    permissions: {
+      type: DataTypes.JSONB,
+      allowNull: false,
+      defaultValue: [],
+    },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
