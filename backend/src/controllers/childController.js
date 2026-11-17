@@ -2,6 +2,7 @@ import User from "../models/userModel.js";
 import UserController from "./userController.js";
 import DashboardController from "./dashboardController.js";
 import ExpenseController from "./expenseController.js";
+import AuthController from "./authController.js";
 import { PERMISSIONS } from "../config/permissions.js";
 
 function validatePassword(password) {
@@ -74,6 +75,11 @@ class ChildController {
     }
 
     await child.save();
+
+    if (password !== undefined || isActive === false) {
+      await AuthController.revokeSessions(child.id);
+    }
+
     return UserController.mapUser(child);
   }
 

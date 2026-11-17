@@ -1,24 +1,7 @@
 import UserController from "../controllers/userController.js";
+import AuthController from "../controllers/authController.js";
 
 class UserView {
-  static async login(req, res) {
-    try {
-      const { email, password } = req.body;
-
-      if (!email || !password) {
-        return res
-          .status(400)
-          .json({ error: "Email and password are required" });
-      }
-
-      const auth = await UserController.login(email, password);
-      return res.json(auth);
-    } catch (error) {
-      console.error("Error in login:", error);
-      return res.status(401).json({ error: error.message });
-    }
-  }
-
   static async getAll(req, res) {
     try {
       const users = await UserController.getAll();
@@ -74,6 +57,7 @@ class UserView {
         return res.status(404).json({ error: "User not found" });
       }
 
+      await AuthController.revokeSessions(id, req.user.sessionId);
       res.json(updatedUser);
     } catch (error) {
       console.error("Error in update user:", error);

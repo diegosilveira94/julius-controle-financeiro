@@ -1,11 +1,11 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import Layout from "../components/Layout";
+import Loading from "../components/Loading";
 
-// Guarda de rota: sem sessão redireciona para /login;
-// com sessão renderiza o Layout (que contém o <Outlet /> das rotas filhas).
 function ProtectedRoute() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <Loading />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return <Layout />;
 }
