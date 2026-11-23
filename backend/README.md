@@ -247,6 +247,31 @@ Resposta:
 - Despesa: `amount` não pode ser negativo; `status` só aceita `PENDENTE` ou `PAGA` (padrão `PENDENTE`).
 - Despesas e dashboard são sempre escopados ao usuário autenticado.
 
+## Segurança
+
+### Mass Assignment
+
+Mass assignment acontece quando a API grava no banco campos que o cliente não deveria controlar, como `role`, `parentId`, `permissions`, `isActive`, `userId` ou `id`. Exemplo: um usuário se cadastrando com `"role": "OWNER"` ou um filho se dando permissões.
+
+A proteção tem duas camadas:
+
+1. **Lista de campos permitidos por rota** (`src/middlewares/allowFields.js`). Toda rota que recebe corpo declara os campos aceitos. Qualquer campo fora da lista faz a requisição ser recusada com `400`, antes de chegar ao controller:
+
+   ```js
+   router.post("/expenses", canUseExpenses, allowFields("description", "amount", "date", "status", "categoryId"), ExpenseView.create);
+   ```
+
+   ```http
+   POST /api/users
+   { "name": "A", "email": "a@a.com", "password": "123456", "role": "CHILD" }
+
+   400 { "error": "Fields not allowed: role" }
+   ```
+
+2. **Atribuição explícita nos controllers.** O `req.body` nunca é passado direto para `create`/`update`; cada campo é copiado um a um. Campos sensíveis são definidos pelo servidor: `userId` vem do token, `role` e `parentId` do responsável logado.
+
+Ao criar uma rota nova que recebe corpo, adicione `allowFields(...)` com os campos que ela aceita.
+
 ## Documentação e testes
 
 - **Swagger:** `http://localhost:3000/api/docs`
