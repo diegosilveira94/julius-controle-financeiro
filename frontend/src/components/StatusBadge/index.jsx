@@ -1,16 +1,16 @@
-const map = {
-  PAGA: "bg-secondary/15 text-secondary",
-  PENDENTE: "bg-tertiary/15 text-tertiary",
-};
+import Icon from "../Icon";
 
 function StatusBadge({ status }) {
+  const paid = status === "PAGA";
+
   return (
-    <span
-      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        map[status] || "bg-surface-2 text-gray-300"
-      }`}
-    >
-      {status === "PAGA" ? "Paga" : "Pendente"}
+    <span className="inline-flex items-center gap-1.5 text-sm text-gray-300">
+      <Icon
+        name={paid ? "checkCircle" : "clock"}
+        size={16}
+        className={paid ? "text-secondary" : "text-tertiary"}
+      />
+      {paid ? "Paga" : "Pendente"}
     </span>
   );
 }
