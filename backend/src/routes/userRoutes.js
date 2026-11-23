@@ -7,7 +7,6 @@ import UserView from "../views/userView.js";
 const router = express.Router();
 const userFields = allowFields("name", "email", "password");
 
-router.post("/auth/login", allowFields("email", "password"), UserView.login);
 router.post("/users", userFields, UserView.create);
 router.get("/users", authMiddleware, UserView.getAll);
 router.get("/users/:id", authMiddleware, requireSelf, UserView.getById);

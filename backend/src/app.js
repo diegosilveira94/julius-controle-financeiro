@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import { sequelize } from "./config/database.js";
 import "./models/expenseModel.js";
 import "./models/categoryModel.js";
@@ -7,6 +8,7 @@ import "./models/associations.js";
 import ExpenseView from "./views/expenseView.js";
 import CategoryView from "./views/categoryView.js";
 import UserView from "./views/userView.js";
+import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
@@ -21,6 +23,8 @@ const PORT = 3000;
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
+app.use("/api", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", expenseRoutes);
 app.use("/api", categoryRoutes);

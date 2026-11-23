@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import ProtectedRoute from "./ProtectedRoute";
+import Loading from "../components/Loading";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Dashboard from "../pages/Dashboard";
@@ -12,7 +13,8 @@ import RequireAccess from "./RequireAccess";
 
 // Rotas públicas não devem ser acessadas por quem já está logado.
 function PublicOnly({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <Loading />;
   return isAuthenticated ? <Navigate to="/" replace /> : children;
 }
 

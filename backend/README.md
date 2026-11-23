@@ -35,9 +35,15 @@ POSTGRES_USER=root
 POSTGRES_PASSWORD=123456
 POSTGRES_DB=expenses
 
-# JWT (opcional — há defaults para desenvolvimento)
-JWT_SECRET=troque-esta-chave
-JWT_EXPIRES_IN=1d
+# Obrigatório, mínimo 32 caracteres
+JWT_SECRET=<gere uma chave aleatória>
+JWT_EXPIRES_IN=15m
+```
+
+O servidor não inicia sem um `JWT_SECRET` com pelo menos 32 caracteres. Para gerar um:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
 ## Como executar
@@ -104,12 +110,15 @@ src/
 ## Autenticação
 
 1. Cadastre um usuário em `POST /api/users`.
-2. Faça login em `POST /api/auth/login` para receber um token JWT.
-3. Envie o token nas rotas protegidas:
+2. Faça login em `POST /api/auth/login`. A resposta traz um **access token** JWT (válido por 15 minutos) e define o cookie `refreshToken` (`HttpOnly`, válido por 7 dias).
+3. Envie o access token nas rotas protegidas:
 
 ```
 Authorization: Bearer <token>
 ```
+
+4. Quando o access token expirar, chame `POST /api/auth/refresh` (o navegador envia o cookie sozinho) para receber um novo.
+5. `POST /api/auth/logout` encerra a sessão no servidor e apaga o cookie.
 
 A senha é armazenada com **bcrypt** (hash), nunca em texto puro.
 
@@ -119,10 +128,12 @@ Base: `http://localhost:3000/api`
 
 ### Auth (públicas)
 
-| Método | Rota        | Descrição                 |
-| ------ | ----------- | ------------------------- |
-| POST   | /users      | Cadastro de usuário       |
-| POST   | /auth/login | Login (retorna token JWT) |
+| Método | Rota          | Descrição                                          |
+| ------ | ------------- | -------------------------------------------------- |
+| POST   | /users        | Cadastro de usuário                                |
+| POST   | /auth/login   | Login (retorna access token e define o cookie)     |
+| POST   | /auth/refresh | Novo access token a partir do cookie (rotaciona)   |
+| POST   | /auth/logout  | Revoga a sessão e apaga o cookie                   |
 
 ### Usuários (protegidas)
 
@@ -236,6 +247,7 @@ Resposta:
 
 ## Entidades
 
+- **Sessão**: id (UUID), userId, tokenHash, userAgent, expiresAt, revokedAt
 - **Usuário**: id, name, email (único), password (hash), role (`OWNER` | `CHILD`), parentId, permissions, isActive, createdAt, updatedAt
 - **Categoria**: id (UUID), name, description
 - **Despesa**: id (UUID), description, amount, date, status (`PENDENTE` | `PAGA`), categoryId, userId
@@ -271,6 +283,20 @@ A proteção tem duas camadas:
 2. **Atribuição explícita nos controllers.** O `req.body` nunca é passado direto para `create`/`update`; cada campo é copiado um a um. Campos sensíveis são definidos pelo servidor: `userId` vem do token, `role` e `parentId` do responsável logado.
 
 Ao criar uma rota nova que recebe corpo, adicione `allowFields(...)` com os campos que ela aceita.
+
+### Session Hijacking
+
+Session hijacking é quando um atacante rouba o token de sessão de alguém (por XSS, por exemplo) e passa a usar a conta dessa pessoa. As medidas:
+
+- **Access token fora do alcance de scripts persistentes.** O frontend guarda o access token só em memória, nunca em `localStorage`. Ao recarregar a página, ele pede um novo em `/auth/refresh`.
+- **Access token de vida curta.** O JWT expira em 15 minutos (`JWT_EXPIRES_IN`) e é verificado só com `HS256`; tokens com `alg: none` ou outro algoritmo são recusados.
+- **Refresh token em cookie protegido.** `HttpOnly` (JavaScript não lê), `SameSite=Strict` (não é enviado em requisições de outros sites), `Secure` em produção e `Path=/api/auth` (só vai para as rotas de autenticação).
+- **Sessões guardadas no servidor** (tabela `Sessions`). Cada login cria uma sessão; o JWT carrega o id dela (`sid`) e o `authMiddleware` confere a cada requisição se a sessão continua válida. Logout, bloqueio e troca de senha têm efeito imediato, sem esperar o token expirar.
+- **Refresh token guardado como hash** (SHA-256). Quem tiver acesso ao banco não consegue usar os tokens.
+- **Rotação com detecção de reuso.** Cada `/auth/refresh` troca o refresh token. Se um token já usado aparecer de novo, ele foi copiado: a sessão é revogada e tanto a vítima quanto o atacante precisam logar de novo.
+- **Sessão presa ao navegador.** O `User-Agent` do login é gravado; um refresh vindo de outro navegador revoga a sessão.
+- **Troca de senha derruba as outras sessões.** Ao alterar a própria senha, as demais sessões do usuário são encerradas. Quando o responsável troca a senha ou bloqueia um filho, todas as sessões do filho são encerradas.
+- **Segredo obrigatório.** O servidor não sobe sem `JWT_SECRET` forte; não existe mais valor padrão.
 
 ## Documentação e testes
 
