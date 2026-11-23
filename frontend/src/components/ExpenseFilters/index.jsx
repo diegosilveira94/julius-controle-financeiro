@@ -23,16 +23,28 @@ function ExpenseFilters({ filters, categories = [], onChange, onClear }) {
             </option>
           ))}
         </Select>
-        <Select
-          label="Status"
-          name="status"
-          value={filters.status}
-          onChange={handleChange}
-        >
-          <option value="">Todos</option>
-          <option value="PENDENTE">Pendente</option>
-          <option value="PAGA">Paga</option>
-        </Select>
+        <div className="grid grid-cols-2 gap-2">
+          <Select
+            label="Status"
+            name="status"
+            value={filters.status}
+            onChange={handleChange}
+          >
+            <option value="">Todos</option>
+            <option value="PENDENTE">Pendente</option>
+            <option value="PAGA">Paga</option>
+          </Select>
+          <Select
+            label="Comprovante"
+            name="hasAttachment"
+            value={filters.hasAttachment}
+            onChange={handleChange}
+          >
+            <option value="">Todos</option>
+            <option value="true">Com</option>
+            <option value="false">Sem</option>
+          </Select>
+        </div>
         <div className="grid grid-cols-2 gap-2">
           <Input
             label="Valor mín."

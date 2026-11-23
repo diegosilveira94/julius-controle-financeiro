@@ -93,6 +93,7 @@ class ExpenseView {
         maxAmount: req.query.maxAmount,
         startDate: req.query.startDate,
         endDate: req.query.endDate,
+        hasAttachment: req.query.hasAttachment,
       });
 
       if (!expenses) {
